@@ -1,0 +1,140 @@
+function HuffmanCoding()
+    % Function definitions for Huffman coding
+
+    % Part 3: Build Huffman tree
+    function node = build_huffman_tree(symbols, probs)
+    % Create a node structure
+    node.symbol = [];
+    node.prob = 0;
+    node.left = [];
+    node.right = [];
+
+    % Check if only one symbol remains
+    if length(symbols) == 1
+        node.symbol = symbols(1);
+        node.prob = probs(1);
+        return;
+    end
+
+    % Create a priority queue using cell array construction
+    queue = cell(1, length(symbols));
+    for i = 1:length(symbols)
+        queue{i} = struct('symbol', symbols(i), 'prob', probs(i), 'left', [], 'right', []);
+    end
+
+    % Sort the queue based on probabilities
+    [~, sort_idx] = sort(cellfun(@(x) x.prob, queue));
+    queue = queue(sort_idx);
+
+    while length(queue) > 1
+        % Extract nodes with minimum probabilities
+        node1 = queue{1};
+        queue(1) = [];
+        node2 = queue{1};
+        queue(1) = [];
+
+        % Create a parent node with combined probability
+        parent.symbol = [];
+        parent.prob = node1.prob + node2.prob;
+        parent.left = node1;
+        parent.right = node2;
+
+        % Add parent node back to the queue
+        queue = [queue {parent}];
+        
+        % Resort the queue based on probabilities
+        [~, sort_idx] = sort(cellfun(@(x) x.prob, queue));
+        queue = queue(sort_idx);
+    end
+
+    % The remaining node is the root of the Huffman tree
+    node = queue{1};
+end
+
+    % Part 4: Assign Huffman codes
+    function codes = assign_huffman_codes(node, code)
+        if isempty(node.left) && isempty(node.right)
+            codes{node.symbol} = code;
+            return;
+        end
+
+        % Traverse left subtree with adding 0 to the code
+        if ~isempty(node.left)
+            codes = assign_huffman_codes(node.left, [code '0']);
+        end
+
+        % Traverse right subtree with adding 1 to the code
+        if ~isempty(node.right)
+            codes = assign_huffman_codes(node.right, [code '1']);
+        end
+    end
+
+    % Read the image
+    image = imread('Huffman.png');
+
+    % Get the size of the image
+    [rows, cols] = size(image);
+
+    % Flatten the image into a 1D array
+    image_data = image(:);
+
+    % Part 1: Identify and count unique pixel values
+    [unique_values, counts] = unique(image_data);
+
+    % Display unique values and their counts
+    disp('Unique Pixel Values and Counts:')
+    for i = 1:length(unique_values)
+        fprintf('%d: %d\n', unique_values(i), counts(i));
+    end
+
+    % Part 2: Calculate probability of each pixel value
+    total_pixels = rows * cols;
+    probabilities = counts / total_pixels;
+
+    % Display probabilities
+    disp('Probabilities of each pixel value:')
+    for i = 1:length(unique_values)
+        fprintf('%d: %.4f\n', unique_values(i), probabilities(i));
+    end
+
+    % Part 3: Build Huffman tree
+    huffman_tree = build_huffman_tree(unique_values, probabilities);
+
+    % Part 4: Assign Huffman codes
+    codes = cell(1, length(unique_values));
+    for i = 1:length(unique_values)
+        symbol = unique_values(i);
+        codes{symbol} = assign_huffman_codes(huffman_tree, '');
+    end
+
+    % Part 5: Encode image data with Huffman codes
+    encoded_data = '';
+    for i = 1:length(image_data)
+        symbol = image_data(i);
+        encoded_data = [encoded_data codes{symbol}];
+    end
+
+    % Part 6: Calculate average bits per symbol
+    total_bits = length(encoded_data);
+    average_bits_per_symbol = total_bits / total_pixels;
+
+    % Part 7: Calculate storage size (in KB) after encoding
+    encoded_bits_size = total_bits;
+    storage_size_kb = encoded_bits_size / 8000;
+
+    % Part 8: Compression Rate (C)
+    original_size_bytes = rows * cols;
+    compressed_size_bytes = encoded_bits_size / 8;
+    compression_rate = original_size_bytes / compressed_size_bytes;
+
+    % Part 9: Percentage decrease (R)
+    percentage_decrease = (1 - compressed_size_bytes / original_size_bytes) * 100;
+
+    % Display results
+    disp('Encoded data:')
+    disp(encoded_data(1:100)); % Display only the first 100 characters for brevity
+    fprintf('Average bits per symbol: %.2f\n', average_bits_per_symbol);
+    fprintf('Storage size after encoding: %.2f KB\n', storage_size_kb);
+    fprintf('Compression Rate: %.4f\n', compression_rate);
+    fprintf('Percentage decrease: %.2f%%\n', percentage_decrease);
+end
