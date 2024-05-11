@@ -1,0 +1,5 @@
+% Load high-resolution satellite image of Earth
+earth_image = imread('high-res_Earth.jpg');
+
+% Load original Pale Blue Dot image
+p
